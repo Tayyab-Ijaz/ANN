@@ -1,0 +1,81 @@
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
+from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import LabelEncoder
+from tensorflow import keras
+from sklearn.metrics import f1_score
+import numpy as np
+
+# Encode labels if needed
+label_encoder = LabelEncoder()
+Y_encoded = label_encoder.fit_transform(Y)#transform is necessary again for Y labels
+num_features = len(signi_components.columns)
+n_classes = len(np.unique(y))
+# Define the ANN model architecture
+model = keras.Sequential()
+model.add(keras.layers.Dense(64, activation='relu', input_shape=(num_features,)))  # Add input layer
+model.add(keras.layers.Dense(64, activation='relu'))  # Add hidden layer
+model.add(keras.layers.Dense(n_classes, activation='softmax'))  # Add output layer
+
+# Compile the model
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+kf = StratifiedKFold(n_splits=5)
+predicted_labels = []
+for train_index, test_index in kf.split(signi_components, Y_encoded):
+    X_train_fold, X_test_fold = np.array(signi_components)[train_index], np.array(signi_components)[test_index]
+    y_train_fold, y_test_fold = Y_encoded[train_index], Y_encoded[test_index]
+
+    # Train the model
+    model.fit(X_train_fold, y_train_fold, epochs=10, batch_size=32, verbose=0)
+
+    # Predict labels for test set
+    ann_pred = model.predict(X_test_fold)
+    ann_pred_labels = np.argmax(ann_pred, axis=1)  # Get the predicted class labels
+
+    predicted_labels.extend(ann_pred_labels)
+
+predicted_labels = label_encoder.inverse_transform(predicted_labels)  # Inverse transform the encoded labels
+from sklearn.metrics import f1_score
+accuracies = []
+precisions = []
+recalls = []
+f1_scores = []
+# Calculate the accuracy of the predictions
+accuracy = accuracy_score(y_test_fold, ann_pred_labels)
+accuracies.append(accuracy)
+
+# Calculate the mean accuracy and standard deviation
+mean_accuracy = np.mean(accuracies)
+
+# Calculate the precision of the predictions
+precision = precision_score(y_test_fold, ann_pred_labels, average='weighted')
+precisions.append(precision)
+
+# Calculate the recall of the predictions
+recall = recall_score(y_test_fold, ann_pred_labels, average='weighted')
+recalls.append(recall)
+
+# Calculate the F1-score of the predictions
+f1 = f1_score(y_test_fold, ann_pred_labels, average='weighted')
+f1_scores.append(f1)
+
+
+# Calculate the mean and standard deviation of accuracy, precision, recall, and F1-score
+mean_accuracy = np.mean(accuracies)
+std_accuracy = np.std(accuracies)
+
+mean_precision = np.mean(precisions)
+std_precision = np.std(precisions)
+
+mean_recall = np.mean(recalls)
+std_recall = np.std(recalls)
+
+mean_f1 = np.mean(f1_scores)
+std_f1 = np.std(f1_scores)
+
+# Print the evaluation metrics
+
+print("Mean accuracy:", mean_accuracy)
+print("Mean precision:", mean_precision)
+print("Mean recall:", mean_recall)
+print("Mean F1-score:", mean_f1)
